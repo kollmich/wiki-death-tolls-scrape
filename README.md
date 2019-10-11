@@ -1,6 +1,4 @@
 * [Description](#description)
-* [Data & Methodology](#data)
-
 
 # Description
 
