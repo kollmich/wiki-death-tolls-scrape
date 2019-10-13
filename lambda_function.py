@@ -21,6 +21,15 @@ df['Mean_est'] = df['Mean_est'].astype(int)
 df['Worldpop_share'] = df.apply(lambda row: row.Mean_est/row.Worldpop, axis=1)
 
 #strings cleanup
+df['Leader'] =  df['Leader'].apply(lambda s: s.replace(" Emperor Xianfeng Empress Dowager Cixi",", Qing Leaders"))
+df['Leader'] =  df['Leader'].apply(lambda s: s.replace("Timur Kublai Khan","and successors"))
+
+df['Lowest_est'] =  df['Lowest_est'].str.replace(r"[\,,)]","")
+df['Lowest_est'] =  df['Lowest_est'].str.replace(r"\[.*\]","").astype(int)
+
+df['Highest_est'] =  df['Highest_est'].str.replace(r"[\,,)]","")
+df['Highest_est'] =  df['Highest_est'].str.replace(r"[\+,)]","")
+df['Highest_est'] =  df['Highest_est'].str.replace(r"\[.*\]","").astype(int)
 
 print(df)
 #export to .csv
