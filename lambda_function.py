@@ -1,58 +1,27 @@
 import requests
 from bs4 import BeautifulSoup
 import pandas as pd
+import wikipedia as wp
 
-website_url = requests.get("https://en.wikipedia.org/wiki/List_of_wars_and_anthropogenic_disasters_by_death_toll#List_of_political_leaders_and_regimes_by_death_toll").text
+#Get the html source and read the 11th table on the page
+html = wp.page("List of wars and anthropogenic disasters by death toll").html().encode("UTF-8")
+df = pd.read_html(html)[11]
 
-soup = BeautifulSoup(website_url,"lxml")
-print(soup.prettify())
+#select the first 5 rows and rename the columns
+df = df[:5]
 
-My_table = soup.find('table',{'class':'sortable wikitable'})
-print(My_table)
+#drop the 'Notes' column and rename headers
+df.drop(columns='Notes',inplace=True)
+df.rename(columns={"Leader(s)": "Leader", "Lowest estimate": "Lowest_est", "Highest estimate": "Highest_est", "Geom. mean estimate[1]": "Mean_est"}, inplace=True)
 
-links = My_table.findAll('a')
-print(links)
+#add world population data and death tolls as a share of the world population
+worldpop = [1260000000, 2520000000, 400000000, 2300000000, 2070000000]
+df['Worldpop'] = worldpop
+df['Mean_est'] = df['Mean_est'].astype(int)
+df['Worldpop_share'] = df.apply(lambda row: row.Mean_est/row.Worldpop, axis=1)
 
-Countries = []
-for link in links:
-    Countries.append(link.get('title'))
-    
-print(Countries)
-
-df = pd.DataFrame()
-df['Country'] = Countries
+#strings cleanup
 
 print(df)
-
-
-# import json
-# from datetime import datetime
-# import os
-# import boto3
-# from craigslist import CraigslistHousing
-
-# def lambda_handler(event, context):
-
-# 	# Pull in environmental variable for number of posts to pull
-# 	number_of_posts = os.environ.get("number_of_posts")
-
-# 	# Instantiate our Craigslist scraper
-# 	cl = CraigslistHousing(site='newyork', 
-# 							area=None, 
-# 							category='aap')
-
-# 	# Pull data from Craigslist and put into a list
-# 	results = cl.get_results(sort_by='newest', geotagged=True, limit=5)
-# 	resultsList = [result for result in results]
-	
-# 	# Convert data to json
-# 	data = json.dumps(resultsList)
-
-# 	# Get the current datetime for the file name
-# 	now = str(datetime.today())
-	
-# 	# Export the data to S3
-# 	client = boto3.client('s3')
-# 	response = client.put_object(Bucket='lazyapartment', 
-# 					Body=data, 
-# 					Key='rawdata/{}.json'.format(now))
+#export to .csv
+df.to_csv('deaths-per-leader.csv',header=1,index=False)
